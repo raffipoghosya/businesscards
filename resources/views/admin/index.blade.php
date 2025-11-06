@@ -16,9 +16,10 @@
                         </div>
                     @endif
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-semibold">Բոլոր քարտերը</h3>
+                        <h3 class="text-2xl font-semibold text-black dark:text-black">Բոլոր քարտերը</h3>
+
                         <a href="{{ route('cards.create') }}"
-                            class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200 active:bg-blue-700 disabled:opacity-25 transition">
+                            class="inline-flex items-center justify-center px-10 py-4 bg-gray-800 border-2 border-gray-800 rounded-md font-bold text-lg text-white uppercase tracking-wide hover:bg-gray-700 hover:border-gray-700 active:bg-gray-900 active:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition ease-in-out duration-150 disabled:opacity-25">
                             Ստեղծել նորը
                         </a>
                     </div>
