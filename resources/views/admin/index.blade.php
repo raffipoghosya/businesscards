@@ -1,71 +1,118 @@
 <x-app-layout>
+    <!-- Թարմացված Հեդեր՝ "Ստեղծել նորը" կոճակը տեղափոխված է աջ -->
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Digital Cards
-        </h2>
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+                Digital Cards
+            </h2>
+            <a href="{{ route('cards.create') }}"
+                class="inline-flex items-center justify-center px-6 py-2 bg-gray-800 dark:bg-gray-200 border-2 border-transparent rounded-md font-bold text-base text-white dark:text-gray-800 uppercase tracking-wide hover:bg-gray-700 dark:hover:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition">
+                 Ստեղծել նորը
+            </a>
+        </div>
     </x-slot>
 
-    <div class="py-12">
+    <!-- Օգտագործում ենք նույն ֆոնը, ինչ "Create" էջում -->
+    <div class="w-full bg-gray-100 dark:bg-gray-900 py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
 
-                <div class="p-6 text-gray-900">
-                    @if (session('success'))
-                        <div class="mb-4 p-4 bg-green-100 text-green-700 border border-green-200 rounded-md">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-2xl font-semibold text-black dark:text-black">Բոլոր քարտերը</h3>
-
-                        <a href="{{ route('cards.create') }}"
-                            class="inline-flex items-center justify-center px-10 py-4 bg-gray-800 border-2 border-gray-800 rounded-md font-bold text-lg text-white uppercase tracking-wide hover:bg-gray-700 hover:border-gray-700 active:bg-gray-900 active:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition ease-in-out duration-150 disabled:opacity-25">
-                            Ստեղծել նորը
-                        </a>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        ID</th>
-                                    <th scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Title</th>
-                                    <th scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Slug (Link)</th>
-                                    <th scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse ($cards as $card)
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $card->id }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $card->title }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">/{{ $card->slug }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="#" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                            <a href="#" class="text-red-600 hover:text-red-900 ml-4">Delete</a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
-                                            Դեռ ստեղծված քարտեր չկան։
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
+            <!-- Հաջողության հաղորդագրություն -->
+            @if (session('success'))
+                <div class="mb-6 bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-200 p-4 rounded-md shadow-md" role="alert">
+                    <p class="font-bold">Հաջողություն</p>
+                    <p>{{ session('success') }}</p>
                 </div>
+            @endif
+
+            <!-- "Բոլոր քարտերը" վերնագիր -->
+            <div class="mb-6 flex justify-between items-center">
+                <h3 class="text-3xl font-bold text-black dark:text-white">Բոլոր քարտերը</h3>
             </div>
+
+            <!-- Քարտերի ցանց (Grid) -->
+            @if ($cards->isEmpty())
+                <!-- Եթե քարտեր չկան -->
+                <div class="text-center p-12 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                    <p class="text-xl font-medium text-gray-500 dark:text-gray-400">Դեռ ստեղծված քարտեր չկան։</p>
+                    <p class="mt-2 text-gray-400">Սեղմեք «Ստեղծել նորը»՝ Ձեր առաջին քարտն ավելացնելու համար։</p>
+                </div>
+            @else
+                <!-- Եթե քարտեր կան, ցուցադրում ենք ցանցը -->
+                <!-- 
+                  ՓՈՓՈԽՈՒԹՅՈՒՆ։ 
+                  Ավելացրել եմ xl:grid-cols-4, որպեսզի շատ մեծ էկրանների վրա 4 քարտ տեղավորվի։
+                -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    
+                    <!-- Ցիկլ յուրաքանչյուր քարտի վրայով -->
+                    @foreach ($cards as $card)
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                            <div class="p-6">
+                                
+                                <!-- Լոգո և վերնագիր -->
+                                <div class="flex items-center space-x-4 mb-4">
+                                    <div class="flex-shrink-0">
+                                        <!-- Ցուցադրում ենք լոգոն, եթե այն գոյություն ունի -->
+                                        @if ($card->logo_path)
+                                            <img class="h-16 w-16 rounded-full object-cover border-2 border-gray-200" src="{{ Storage::url($card->logo_path) }}" alt="{{ $card->title }} Logo">
+                                        @else
+                                            <!-- Եթե ոչ, ցուցադրում ենք սկզբնատառերը -->
+                                            <div class="h-16 w-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                                <span class="text-2xl font-bold text-gray-500 dark:text-gray-300">{{ strtoupper(substr($card->title, 0, 2)) }}</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xl font-bold text-gray-900 dark:text-white truncate">{{ $card->title }}</p>
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                            {{ route('card.public.show', $card) }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- QR Կոդ -->
+                                <div class="flex justify-center items-center p-4 bg-white rounded-lg mt-4 border border-gray-100 dark:border-gray-700">
+                                    <!-- 
+                                      ՈՒՂՂՈՒՄ։ 
+                                      Հեռացված է ->style('svg')-ը, որն առաջացնում էր սխալ։
+                                      backgroundColor(255, 255, 255, 0)-ն ապահովում է թափանցիկ ֆոն SVG-ի համար։
+                                    -->
+                                    {!! QrCode::size(150)->backgroundColor(255, 255, 255, 0)->generate(route('card.public.show', $card)) !!}
+                                </div>
+
+                                <!-- Կոճակների խումբ -->
+                                <div class="mt-6 grid grid-cols-2 gap-3">
+                                    <!-- Խմբագրել -->
+                                    <a href="#" class="col-span-2 inline-flex items-center justify-center px-4 py-2 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition">
+                                        <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                                        Խմբագրել (Edit)
+                                    </a>
+                                    
+                                    <!-- Տեսնել -->
+                                    <a href="{{ route('card.public.show', $card) }}" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-200 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition">
+                                        <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                        Տեսնել
+                                    </a>
+
+                                    <!-- Ներբեռնել QR -->
+                                    <a href="{{ route('cards.qr.download', $card) }}" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition">
+                                        <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                                        QR
+                                    </a>
+                                    
+                                </div>
+                                
+                                <!-- Ջնջելու կոճակը (կիրականացնենք ավելի ուշ) -->
+                                <div class="mt-3 text-center">
+                                    <a href="#" class="text-sm text-red-500 hover:text-red-700 dark:hover:text-red-400">
+                                        Ջնջել քարտը
+                                    </a>
+                                SBA                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
         </div>
     </div>
 </x-app-layout>

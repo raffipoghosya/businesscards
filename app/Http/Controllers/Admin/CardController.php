@@ -8,6 +8,11 @@ use Illuminate\Http\Request; // Սա անհրաժեշտ է update-ի համար
 use App\Http\Requests\Admin\StoreCardRequest; // Մեր վավերացման ֆայլը
 use Illuminate\Support\Facades\Storage; // Սա անհրաժեշտ է ֆայլերի հետ աշխատելու համար
 
+// --- ԱՎԵԼԱՑՐԵՔ ԱՅՍ 2 ՏՈՂԸ ---
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Response;
+// -----------------------------
+
 class CardController extends Controller
 {
     /**
@@ -15,10 +20,8 @@ class CardController extends Controller
      */
     public function index()
     {
-        // Գտնում ենք բոլոր քարտերը ՏԲ-ից
-        $cards = BusinessCard::all();
-
-        // Ուղարկում ենք դրանք view ֆայլին
+        // Փոխում ենք all()-ը latest()-ով, որ նոր ստեղծածը առաջինը երևա
+        $cards = BusinessCard::latest()->get();
         return view('admin.index', compact('cards'));
     }
 
@@ -27,7 +30,6 @@ class CardController extends Controller
      */
     public function create()
     {
-        // Օգտագործում ենք Ձեր նշած ճշգրիտ ցանկը
         $availableLinks = [
             ['key' => 'phone',     'label' => 'Հեռախոսահամար'],
             ['key' => 'sms',       'label' => 'SMS հեռախոսահամար'],
@@ -40,8 +42,6 @@ class CardController extends Controller
             ['key' => 'instagram', 'label' => 'Instagram'],
             ['key' => 'location',  'label' => 'Location (Google Maps)'],
         ];
-    
-        // Փոխանցում ենք այս ցանկը view-ին
         return view('admin.create', compact('availableLinks'));
     }
 
@@ -51,22 +51,17 @@ class CardController extends Controller
      */
     public function store(StoreCardRequest $request)
     {
-        // 1. Վերցնում ենք բոլոր վավերացված տվյալները
         $validatedData = $request->validated();
 
-        // 2. Ֆայլերի մշակում
         if ($request->hasFile('logo')) {
-            // Պահպանում ենք 'storage/app/public/logos' պանակում
             $logoPath = $request->file('logo')->store('logos', 'public');
             $validatedData['logo_path'] = $logoPath;
         }
         if ($request->hasFile('background_image')) {
-            // Պահպանում ենք 'storage/app/public/backgrounds' պանակում
             $bgPath = $request->file('background_image')->store('backgrounds', 'public');
             $validatedData['background_image_path'] = $bgPath;
         }
 
-        // 3. Հղումների (Links) մշակում (Ձեր ցանկով)
         $processedLinks = [];
         $availableLinks = [
             ['key' => 'phone',     'label' => 'Հեռախոսահամար'],
@@ -81,15 +76,12 @@ class CardController extends Controller
             ['key' => 'location',  'label' => 'Location (Google Maps)'],
         ];
 
-        $inputLinks = $validatedData['links'] ?? []; // Ֆորմայից եկած տվյալները
+        $inputLinks = $validatedData['links'] ?? [];
 
         foreach ($availableLinks as $link) {
             $key = $link['key'];
-            
             $isActive = isset($inputLinks[$key]['active']);
             $value = $inputLinks[$key]['value'] ?? null;
-
-            // Պահպանում ենք, եթե նշված է ԵՎ դաշտը դատարկ չէ
             if ($isActive && !empty($value)) {
                 $processedLinks[] = [
                     'key' => $key,
@@ -100,26 +92,43 @@ class CardController extends Controller
             }
         }
         
-        // Պահպանում ենք մշակված ցանկը
         $validatedData['links'] = $processedLinks; 
-        
-        // 4. *** ԿԱՐԵՎՈՐ ԹԱՐՄԱՑՈՒՄ ՁԵՐ ՊԱՀԱՆՋՈՎ ***
-        // Սահմանում ենք, որ լոգոյի ֆոնի գույնը նույնն է, ինչ բրենդային գույնը
         $validatedData['logo_bg_color'] = $validatedData['brand_color'];
-
-        // 5. Ստեղծում ենք քարտը
         BusinessCard::create($validatedData);
 
-        // 6. Վերադառնում ենք դաշբորդ
         return redirect()->route('dashboard')->with('success', 'Քարտը հաջողությամբ ստեղծվեց։');
     }
+
+    // --- ԱՎԵԼԱՑՐԵՔ ԱՅՍ ՆՈՐ ՖՈՒՆԿՑԻԱՆ ---
+    /**
+     * Գեներացնում և ներբեռնում է QR կոդը
+     */
+    public function downloadQr(BusinessCard $card)
+    {
+        // Ստեղծում ենք հղումը, օրինակ՝ http://localhost:8000/hakob
+        $url = route('card.public.show', $card);
+
+        // Գեներացնում ենք PNG ֆորմատի QR կոդ
+        $qrCode = QrCode::format('png')->size(300)->margin(1)->generate($url);
+
+        // Ստեղծում ենք ֆայլի անունը, օրինակ՝ hakob-qr-code.png
+        $filename = $card->slug . '-qr-code.png';
+
+        // Վերադարձնում ենք պատասխանը որպես ներբեռնվող ֆայլ
+        return Response::make($qrCode, 200, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+    // ------------------------------------
+
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        // Սա կիրականացնենք հաջորդ քայլերում (հանրային էջի համար)
+        //
     }
 
     /**
@@ -127,7 +136,7 @@ class CardController extends Controller
      */
     public function edit(string $id)
     {
-        // Սա կիրականացնենք հաջորդ քայլերում
+        //
     }
 
     /**
@@ -135,7 +144,7 @@ class CardController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // Սա կիրականացնենք հաջորդ քայլերում
+        //
     }
 
     /**
@@ -143,6 +152,6 @@ class CardController extends Controller
      */
     public function destroy(string $id)
     {
-        // Սա կիրականացնենք հաջորդ քայլերում
+        //
     }
 }
