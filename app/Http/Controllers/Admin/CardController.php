@@ -4,23 +4,33 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\BusinessCard;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request; // Սա անհրաժեշտ է update-ի համար
-use App\Http\Requests\Admin\StoreCardRequest; // Մեր վավերացման ֆայլը
-use Illuminate\Support\Facades\Storage; // Սա անհրաժեշտ է ֆայլերի հետ աշխատելու համար
-
-// Գրադարաններ QR կոդի համար
+use Illuminate\Http\Request; // Հիմա սա մեզ պետք է
+use App\Http\Requests\Admin\StoreCardRequest; 
+use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Response;
 
-
 class CardController extends Controller
 {
+    // Սահմանում ենք մեր հղումների ցանկը մեկ տեղում, որպեսզի կրկնօրինակում չլինի
+    private $availableLinks = [
+        'phone'     => 'Հեռախոսահամար',
+        'sms'       => 'SMS հեռախոսահամար',
+        'mail'      => 'Էլ. փոստ (Email)',
+        'website'   => 'Վեբ էջ',
+        'whatsapp'  => 'WhatsApp',
+        'viber'     => 'Viber',
+        'facebook'  => 'Facebook',
+        'messenger' => 'Messenger',
+        'instagram' => 'Instagram',
+        'location'  => 'Location (Google Maps)',
+    ];
+
     /**
      * Ցուցադրում է բոլոր քարտերի ցանկը (Dashboard)
      */
     public function index()
     {
-        // Փոխում ենք all()-ը latest()-ով, որ նոր ստեղծածը առաջինը երևա
         $cards = BusinessCard::latest()->get();
         return view('admin.index', compact('cards'));
     }
@@ -30,19 +40,8 @@ class CardController extends Controller
      */
     public function create()
     {
-        $availableLinks = [
-            ['key' => 'phone',     'label' => 'Հեռախոսահամար'],
-            ['key' => 'sms',       'label' => 'SMS հեռախոսահամար'],
-            ['key' => 'mail',      'label' => 'Էլ. փոստ (Email)'],
-            ['key' => 'website',   'label' => 'Վեբ էջ'],
-            ['key' => 'whatsapp',  'label' => 'WhatsApp'],
-            ['key' => 'viber',     'label' => 'Viber'],
-            ['key' => 'facebook',  'label' => 'Facebook'],
-            ['key' => 'messenger', 'label' => 'Messenger'],
-            ['key' => 'instagram', 'label' => 'Instagram'],
-            ['key' => 'location',  'label' => 'Location (Google Maps)'],
-        ];
-        return view('admin.create', compact('availableLinks'));
+        // Փոխանցում ենք հղումների ցանկը view-ին
+        return view('admin.create', ['availableLinks' => $this->availableLinks]);
     }
 
 
@@ -54,103 +53,118 @@ class CardController extends Controller
         $validatedData = $request->validated();
 
         if ($request->hasFile('logo')) {
-            $logoPath = $request->file('logo')->store('logos', 'public');
-            $validatedData['logo_path'] = $logoPath;
+            $validatedData['logo_path'] = $request->file('logo')->store('logos', 'public');
         }
         if ($request->hasFile('background_image')) {
-            $bgPath = $request->file('background_image')->store('backgrounds', 'public');
-            $validatedData['background_image_path'] = $bgPath;
+            $validatedData['background_image_path'] = $request->file('background_image')->store('backgrounds', 'public');
         }
 
-        $processedLinks = [];
-        $availableLinks = [
-            ['key' => 'phone',     'label' => 'Հեռախոսահամար'],
-            ['key' => 'sms',       'label' => 'SMS հեռախոսահամար'],
-            ['key' => 'mail',      'label' => 'Էլ. փոստ (Email)'],
-            ['key' => 'website',   'label' => 'Վեբ էջ'],
-            ['key' => 'whatsapp',  'label' => 'WhatsApp'],
-            ['key' => 'viber',     'label' => 'Viber'],
-            ['key' => 'facebook',  'label' => 'Facebook'],
-            ['key' => 'messenger', 'label' => 'Messenger'],
-            ['key' => 'instagram', 'label' => 'Instagram'],
-            ['key' => 'location',  'label' => 'Location (Google Maps)'],
-        ];
-
-        $inputLinks = $validatedData['links'] ?? [];
-
-        foreach ($availableLinks as $link) {
-            $key = $link['key'];
-            $isActive = isset($inputLinks[$key]['active']);
-            $value = $inputLinks[$key]['value'] ?? null;
-            if ($isActive && !empty($value)) {
-                $processedLinks[] = [
-                    'key' => $key,
-                    'label' => $link['label'],
-                    'value' => $value,
-                    'active' => true 
-                ];
-            }
-        }
+        // Մշակում ենք հղումները
+        $validatedData['links'] = $this->processLinks($validatedData['links'] ?? []);
         
-        $validatedData['links'] = $processedLinks; 
+        // Սահմանում ենք լոգոյի գույնը
         $validatedData['logo_bg_color'] = $validatedData['brand_color'];
+        
         BusinessCard::create($validatedData);
 
         return redirect()->route('dashboard')->with('success', 'Քարտը հաջողությամբ ստեղծվեց։');
     }
 
     /**
-     * Գեներացնում և ներբեռնում է QR կոդը
+     * Ցուցադրում է խմբագրման ֆորման
+     */
+    public function edit(BusinessCard $card) // Route Model Binding
+    {
+        // $card->links-ը արդեն իսկ զանգված է (array), շնորհիվ մեր Model-ի $casts-ի
+        // Բայց այն պարունակում է միայն ակտիվները։ Մենք պետք է այն համեմատենք $availableLinks-ի հետ։
+        // Մեր edit.blade.php-ն արդեն իսկ անում է այս տրամաբանությունը, 
+        // այնպես որ մենք ուղղակի փոխանցում ենք երկուսն էլ։
+        
+        return view('admin.edit', [
+            'card' => $card,
+            'availableLinks' => $this->availableLinks
+        ]);
+    }
+
+    /**
+     * Թարմացնում է քարտը ՏԲ-ում
+     */
+    public function update(StoreCardRequest $request, BusinessCard $card)
+    {
+        $validatedData = $request->validated();
+
+        // Ֆայլի թարմացում (ստուգում ենք՝ արդյոք նոր ֆայլ է վերբեռնվել)
+        if ($request->hasFile('logo')) {
+            // Ջնջում ենք հին ֆայլը, եթե այն գոյություն ունի
+            if ($card->logo_path) {
+                Storage::disk('public')->delete($card->logo_path);
+            }
+            $validatedData['logo_path'] = $request->file('logo')->store('logos', 'public');
+        }
+
+        if ($request->hasFile('background_image')) {
+            if ($card->background_image_path) {
+                Storage::disk('public')->delete($card->background_image_path);
+            }
+            $validatedData['background_image_path'] = $request->file('background_image')->store('backgrounds', 'public');
+        }
+
+        // Մշակում ենք հղումները
+        $validatedData['links'] = $this->processLinks($validatedData['links'] ?? []);
+        
+        // Սահմանում ենք լոգոյի գույնը
+        $validatedData['logo_bg_color'] = $validatedData['brand_color'];
+
+        // Թարմացնում ենք մոդելը
+        $card->update($validatedData);
+
+        return redirect()->route('dashboard')->with('success', 'Քարտը հաջողությամբ թարմացվեց։');
+    }
+
+
+    /**
+     * Գեներացնում և ներբեռնում է QR կոդը (SVG)
      */
     public function downloadQr(BusinessCard $card)
     {
-        // Ստեղծում ենք հղումը
         $url = route('card.public.show', $card);
-
-        // *** ՈՒՂՂՈՒՄԸ ԱՅՍՏԵՂ Է ***
-        // Գեներացնում ենք SVG ֆորմատի QR կոդ (սա imagick ՉԻ պահանջում)
         $qrCode = QrCode::format('svg')->size(300)->margin(1)->generate($url);
-
-        // Փոխում ենք ֆայլի անունը .svg-ի
         $filename = $card->slug . '-qr-code.svg';
 
-        // Փոխում ենք Content-Type-ը image/svg+xml-ի
         return Response::make($qrCode, 200, [
             'Content-Type' => 'image/svg+xml',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 
-
     /**
-     * Display the specified resource.
+     * Օգնող ֆունկցիա՝ հղումները մշակելու համար
      */
-    public function show(string $id)
+    private function processLinks(array $inputLinks): array
     {
-        //
+        $processedLinks = [];
+        foreach ($this->availableLinks as $key => $label) {
+            $isActive = isset($inputLinks[$key]['active']);
+            $value = $inputLinks[$key]['value'] ?? null;
+
+            if ($isActive && !empty($value)) {
+                $processedLinks[] = [
+                    'key' => $key,
+                    'label' => $label, // Օգտագործում ենք մեր հիմնական լեյբլը
+                    'value' => $value,
+                    'active' => true 
+                ];
+            }
+        }
+        return $processedLinks;
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        //
+        // Սա կիրականացնենք հաջորդ քայլում
     }
 }
