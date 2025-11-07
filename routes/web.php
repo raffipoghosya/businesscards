@@ -36,7 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [CardController::class, 'index'])->name('dashboard');
     
     // CRUD (Create, Read, Update, Delete)
-    Route::resource('cards', CardController::class)->except(['destroy']);
+    // ՓՈՓՈԽՈՒԹՅՈՒՆ: Հեռացրել ենք except(['destroy'])
+    Route::resource('cards', CardController::class);
     
     // QR կոդը ներբեռնելու համար
     Route::get('/cards/{card}/qr-download', [CardController::class, 'downloadQr'])->name('cards.qr.download');

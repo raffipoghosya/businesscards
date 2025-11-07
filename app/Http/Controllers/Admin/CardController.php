@@ -14,16 +14,16 @@ class CardController extends Controller
 {
     // Սահմանում ենք մեր հղումների ցանկը մեկ տեղում, որպեսզի կրկնօրինակում չլինի
     private $availableLinks = [
-        'phone'     => 'Հեռախոսահամար',
-        'sms'       => 'SMS հեռախոսահամար',
-        'mail'      => 'Էլ. փոստ (Email)',
-        'website'   => 'Վեբ էջ',
+        'phone'     => 'Phone',
+        'sms'       => 'SMS',
+        'mail'      => 'Mail',
+        'website'   => 'Website',
         'whatsapp'  => 'WhatsApp',
         'viber'     => 'Viber',
         'facebook'  => 'Facebook',
         'messenger' => 'Messenger',
         'instagram' => 'Instagram',
-        'location'  => 'Location (Google Maps)',
+        'location'  => 'Location',
     ];
 
     /**
@@ -163,8 +163,24 @@ class CardController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(BusinessCard $card) // Route Model Binding
     {
-        // Սա կիրականացնենք հաջորդ քայլում
+        $cardTitle = $card->title; // Պահպանում ենք անվանումը հաղորդագրության համար
+
+        // 1. Ջնջում ենք լոգոն, եթե այն գոյություն ունի
+        if ($card->logo_path) {
+            Storage::disk('public')->delete($card->logo_path);
+        }
+
+        // 2. Ջնջում ենք ֆոնի նկարը, եթե այն գոյություն ունի
+        if ($card->background_image_path) {
+            Storage::disk('public')->delete($card->background_image_path);
+        }
+        
+        // 3. Ջնջում ենք գրառումը ՏԲ-ից
+        $card->delete();
+
+        // 4. Վերադարձնում ենք հաջողության հաղորդագրություն
+        return redirect()->route('dashboard')->with('success', "«{$cardTitle}» քարտը հաջողությամբ ջնջվեց։");
     }
 }
