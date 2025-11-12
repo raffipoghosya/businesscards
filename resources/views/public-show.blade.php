@@ -285,24 +285,7 @@ $vcard_link = generateVCard($card);
 
         </div>
 
-        <div class="relative z-10 w-full px-6 pt-8">
-            
-            <h2 class="text-2xl font-bold text-white text-center mb-6 tracking-widest">FEEDBACK</h2>
-
-            <form action="#" method="POST" class="space-y-4">
-                <input type="text" name="first_name" placeholder="First name" class="feedback-input h-14" required>
-                <input type="text" name="last_name" placeholder="Last name" class="feedback-input h-14" required>
-                <input type="email" name="email" placeholder="E-mail" class="feedback-input h-14" required>
-                <input type="tel" name="phone" placeholder="+XXXXXXXXXX" class="feedback-input h-14">
-                <textarea name="message" placeholder="Message" rows="5" class="feedback-input resize-none"></textarea>
-                
-                <div class="text-center pt-4">
-                    <button type="submit" class="inline-flex items-center justify-center py-3 px-12 rounded-full text-center text-white font-bold uppercase shadow-2xl transition-transform duration-200 hover:scale-[1.02]"
-                           style="background-color: {{ $brand_color }};">
-                        send
-                    </button>
-                </div>
-            </form>
+        
 
             <div class="my-10 border-t border-gray-700"></div> 
             
