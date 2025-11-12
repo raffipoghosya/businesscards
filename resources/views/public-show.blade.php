@@ -107,7 +107,7 @@ $vcard_link = generateVCard($card);
                             $iconContent = '';
                             $href = $link['value'];
                             $label = $link['label'];
-                            $iconPath = 'icons/';
+                            $iconPath = 'iconsvg/';
 
                             switch ($link['key']) {
                                 case 'phone':
@@ -183,16 +183,16 @@ $vcard_link = generateVCard($card);
 
             <div class="flex justify-center space-x-4 pb-12">
                 <a href="https://www.facebook.com/sharer/sharer.php?u={{ url()->current() }}" target="_blank" class="w-14 h-14 bg-[#2c2c2c] rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors duration-200">
-                    <img src="{{ asset('icons/facebook.svg') }}" alt="Facebook Share Icon" class="share-icon-img">
+                    <img src="{{ asset('iconsvg/facebook.svg') }}" alt="Facebook Share Icon" class="share-icon-img">
                 </a>
                 <a href="https://wa.me/?text=Check%20out%20my%20digital%20card:%20{{ url()->current() }}" target="_blank" class="w-14 h-14 bg-[#2c2c2c] rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors duration-200">
-                    <img src="{{ asset('icons/whatsapp.svg') }}" alt="WhatsApp Share Icon" class="share-icon-img">
+                    <img src="{{ asset('iconsvg/whatsapp.svg') }}" alt="WhatsApp Share Icon" class="share-icon-img">
                 </a>
                 <a href="https://www.instagram.com/share?url={{ urlencode(url()->current()) }}" target="_blank" class="w-14 h-14 bg-[#2c2c2c] rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors duration-200">
-                    <img src="{{ asset('icons/instagram.svg') }}" alt="Instagram Share Icon" class="share-icon-img">
+                    <img src="{{ asset('iconsvg/instagram.svg') }}" alt="Instagram Share Icon" class="share-icon-img">
                 </a>
                 <a href="sms:?body=Check%20out%20my%20digital%20card:%20{{ url()->current() }}" class="w-14 h-14 bg-[#2c2c2c] rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors duration-200">
-                    <img src="{{ asset('icons/sms.svg') }}" alt="SMS Share Icon" class="share-icon-img">
+                    <img src="{{ asset('iconsvg/sms.svg') }}" alt="SMS Share Icon" class="share-icon-img">
                 </a>
             </div>
 
@@ -202,7 +202,7 @@ $vcard_link = generateVCard($card);
     <div class="fixed-contact-button text-center">
         <a href="{{ $vcard_link }}" download="{{ $card->slug }}.vcf"
            class="inline-flex items-center justify-center w-full max-w-[280px] contact-btn transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
-            <img src="{{ asset('icons/add-user.svg') }}" alt="Add User Icon" class="icon-img mr-3">
+            <img src="{{ asset('iconsvg/add-user.svg') }}" alt="Add User Icon" class="icon-img mr-3">
             <span class="text-lg uppercase tracking-wide">
                 Add me to the contact list
             </span>
