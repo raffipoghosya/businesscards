@@ -322,9 +322,19 @@ $vcard_link = generateVCard($card);
                         $href = $val;
                         break;
                     case 'tiktok': 
-                        $iconContent = '<img src="' . asset($iconPath . 'tiktok.svg') . '" class="icon-img">'; 
-                        $href = 'tiktok://user/profile/' . basename(rtrim($link['value'], '/'));
-                        break;
+    $iconContent = '<img src="' . asset($iconPath . 'tiktok.svg') . '" class="icon-img">'; 
+    
+    $val = $link['value'];
+    // Ստուգում ենք՝ եթե արդեն հղում է (http...), թողնում ենք նույնը
+    if (str_starts_with($val, 'http')) {
+        $href = $val;
+    } else {
+        // Եթե միայն username է գրված, սարքում ենք ճիշտ հղում
+        // Մաքրում ենք ավելորդ @ նշանը, եթե կա, և նորից ավելացնում (որ կրկնակի չլինի)
+        $username = str_replace('@', '', basename(rtrim($val, '/')));
+        $href = 'https://www.tiktok.com/@' . $username;
+    }
+    break;
                         
                     // Մյուսները
                     case 'website': $iconContent = '<img src="' . asset($iconPath . 'web.svg') . '" class="icon-img">'; break;

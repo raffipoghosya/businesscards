@@ -80,12 +80,19 @@ if (!function_exists('generateVCard')) {
             }
         }
 
-        if ($card->logo_path) {
-             $photoUrl = Storage::url($card->logo_path);
-             if (!Str::startsWith($photoUrl, ['http://', 'https://'])) {
-                 $photoUrl = asset($photoUrl);
-             }
-             $vcard .= "PHOTO;VALUE=URI:" . $photoUrl . "\r\n";
+        if ($card->logo_path && Storage::disk('public')->exists($card->logo_path)) {
+            // Ստանում ենք նկարի ֆայլը
+            $imageContent = Storage::disk('public')->get($card->logo_path);
+            
+            // Վերածում ենք Base64 կոդի, որպեսզի ներդրվի ֆայլի մեջ
+            $base64 = base64_encode($imageContent);
+            
+            // Որոշում ենք ֆայլի տիպը (JPEG, PNG և այլն)
+            $ext = strtoupper(pathinfo($card->logo_path, PATHINFO_EXTENSION));
+            if ($ext === 'JPG') $ext = 'JPEG';
+            
+            // Ավելացնում ենք VCard-ի մեջ
+            $vcard .= "PHOTO;ENCODING=b;TYPE={$ext}:{$base64}\r\n";
         }
 
         $vcard .= "END:VCARD\r\n";
