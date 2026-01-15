@@ -297,9 +297,18 @@ $vcard_link = generateVCard($card);
 
                     // Սոցիալական մեդիա (Փորձում ենք օգտագործել App Schemes)
                     case 'facebook':
-                        $iconContent = '<img src="' . asset($iconPath . 'facebook.svg') . '" class="icon-img">';
-                        $href = 'fb://profile/' . basename(rtrim($link['value'], '/')); 
-                        break;
+    $iconContent = '<img src="' . asset($iconPath . 'facebook.svg') . '" class="icon-img">';
+    
+    $val = $link['value'];
+    // Ստուգում ենք՝ եթե արդեն հղում է (http...), թողնում ենք նույնը
+    if (str_starts_with($val, 'http')) {
+        $href = $val;
+    } else {
+        // Եթե միայն username է, սարքում ենք https հղում
+        $username = basename(rtrim($val, '/')); 
+        $href = 'https://www.facebook.com/' . $username;
+    }
+    break;
                     case 'messenger': 
                         $iconContent = '<img src="' . asset($iconPath . 'massenger.svg') . '" class="icon-img">'; 
                         $href = 'fb-messenger://user-thread/' . basename(rtrim($link['value'], '/'));
